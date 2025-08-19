@@ -1,20 +1,31 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
-  <title>Extracted Content</title>
-  <link rel="stylesheet" href="sidepanel.css">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Extracted Content</title>
+    <link rel="stylesheet" href="./sidepanel.css">
+    <style>
+        .card-content.truncated p:nth-child(n+5) {
+            display: none;
+        }
+    </style>
 </head>
+
 <body>
-  <div class="container">
+    <div class="container">
+        <!-- Error message, hidden by default -->
+        <div id="error" class="error-message"></div>
+    </div>
+
     <!-- Loading spinner, shown by default -->
-    <div id="loader" class="loader"></div>
+    <div id="loading" class="loader"></div>
 
-    <!-- Error message, hidden by default -->
-    <div id="error" class="error-message" style="display: none;"></div>
+    <div class="card-list">
+    </div>
 
-    <!-- Main content area, hidden by default -->
-    <div id="content" style="display: none;"></div>
-  </div>
-  <script src="sidepanel.js" type="module"></script>
 </body>
+<script src="./sidepanel.js" type="module"></script>
+
 </html>

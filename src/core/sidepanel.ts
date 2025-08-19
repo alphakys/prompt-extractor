@@ -60,58 +60,83 @@ function renderPrompt(promptArr: string[][]): void {
     if (!cardListElem) return;
 
     showLoading(false);
+    cardListElem.innerHTML = ""; // Clear previous content
 
-    cardListElem.innerHTML = "";
     if (!promptArr || promptArr.length === 0) {
         cardListElem.innerHTML = `<div class="status-message">No prompts found.</div>`;
         return;
     }
 
     promptArr.forEach((prompt, index) => {
-        const cardDiv: HTMLDivElement = document.createElement("div");
-        cardDiv.classList.add("card");
-
-        const header: HTMLHeadingElement = document.createElement("h3");
-        header.textContent = `Prompt-${(index + 1).toString()}`;
-
-        const wrapper: HTMLDivElement = document.createElement("div");
-        wrapper.classList.add("card-content");
-        wrapper.setAttribute("data-id", `prompt-${(index + 1).toString()}`);
-
-        prompt.forEach((content) => {
-            const para: HTMLParagraphElement = document.createElement("p");
-            para.textContent = content;
-            wrapper.appendChild(para);
-        });
-
-        cardDiv.appendChild(header);
-        cardDiv.appendChild(wrapper);
-
-        if (prompt.length > 4) {
-            wrapper.classList.add("truncated");
-            const toggleBtn: HTMLButtonElement =
-                document.createElement("button");
-            toggleBtn.classList.add("toggle-btn");
-            toggleBtn.innerHTML =
-                'More <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>';
-
-            toggleBtn.addEventListener("click", () => {
-                const isTruncated = wrapper.classList.contains("truncated");
-                wrapper.classList.toggle("truncated", !isTruncated);
-
-                if (isTruncated) {
-                    toggleBtn.innerHTML =
-                        'Less <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 15l-6-6-6 6"/></svg>';
-                } else {
-                    toggleBtn.innerHTML =
-                        'More <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>';
-                }
-            });
-            cardDiv.appendChild(toggleBtn);
-        }
-
-        cardListElem.appendChild(cardDiv);
+        const cardElement = createPromptCard(prompt, index);
+        cardListElem.appendChild(cardElement);
     });
+}
+
+/**
+ * Creates a single prompt card element.
+ * @param prompt - An array of strings representing the prompt content.
+ * @param index - The index of the prompt, used for the title.
+ * @returns A DIV element representing the card.
+ */
+function createPromptCard(prompt: string[], index: number): HTMLDivElement {
+    const cardDiv = document.createElement("div");
+    cardDiv.className = "card";
+
+    const header = document.createElement("h3");
+    header.textContent = `Prompt-${index + 1}`;
+    cardDiv.appendChild(header);
+
+    // Create a container for buttons
+    const buttonContainer = document.createElement("div");
+    buttonContainer.className = "button-container";
+
+    // Add Copy Button
+    const copyBtn = document.createElement("button");
+    copyBtn.className = "copy-btn";
+    copyBtn.textContent = "Copy";
+    copyBtn.addEventListener("click", () => {
+        const textToCopy = prompt.join("\n");
+        navigator.clipboard.writeText(textToCopy).then(() => {
+            copyBtn.textContent = "Copied!";
+            setTimeout(() => {
+                copyBtn.textContent = "Copy";
+            }, 2000);
+        });
+    });
+    buttonContainer.appendChild(copyBtn);
+    cardDiv.appendChild(buttonContainer);
+
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "card-content";
+    wrapper.dataset.id = `prompt-${index + 1}`;
+
+    prompt.forEach((content) => {
+        const p = document.createElement("p");
+        p.textContent = content;
+        wrapper.appendChild(p);
+    });
+    cardDiv.appendChild(wrapper);
+
+    // Add a toggle button only if the content is long
+    if (prompt.length > 4) {
+        wrapper.classList.add("truncated");
+        const toggleBtn = document.createElement("button");
+        toggleBtn.className = "toggle-btn";
+        toggleBtn.innerHTML =
+            'More <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>';
+
+        toggleBtn.addEventListener("click", () => {
+            const isTruncated = wrapper.classList.toggle("truncated");
+            toggleBtn.innerHTML = isTruncated
+                ? 'More <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>'
+                : 'Less <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 15l-6-6-6 6"/></svg>';
+        });
+        cardDiv.appendChild(toggleBtn);
+    }
+
+    return cardDiv;
 }
 
 // Helper for loading state

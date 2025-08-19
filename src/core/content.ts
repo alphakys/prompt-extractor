@@ -1,7 +1,7 @@
 // src/ts/content.ts (Updated for integration)
 import { MESSAGES, MessagePayloads } from "../shared/messages";
 import { IExtractor, ExtractionResult } from "../shared/types";
-import { GeminiExtractor } from "../extractors/geminiExtractor"; // Import specific extractors
+import { GeminiExtractor } from "../extractors/geminiExtractor";
 
 declare global {
     interface Window {
@@ -32,9 +32,7 @@ if (!window.__SIDE_PANEL_EXTRACTOR_LOADED__) {
                 if (message.type === MESSAGES.EXTRACT_CONTENT) {
                     (async () => {
                         const { url } = message.payload;
-                        const extractor = extractors.find((ext) =>
-                            ext.canHandle(url)
-                        );
+                        const extractor = extractors[0];
                         let result: ExtractionResult;
 
                         if (!extractor) {
@@ -101,7 +99,12 @@ async function extractWithRetry(
                     }
                 });
 
-                observer.observe(document, { childList: true, subtree: true });
+                const mutationOptions = {
+                    childList: true,
+                    subtree: true,
+                    // CharacterData: true,
+                };
+                observer.observe(document, mutationOptions);
                 setTimeout(() => {
                     observer.disconnect();
                     reject(new Error("DOM readiness timeout"));
@@ -111,6 +114,7 @@ async function extractWithRetry(
             return await extractor.extract();
         } catch (error) {
             attempt++;
+            console.log("attempt : ", attempt);
             if (attempt >= maxRetries) {
                 return { status: "error", message: (error as Error).message };
             }

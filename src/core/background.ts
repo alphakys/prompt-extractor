@@ -8,13 +8,6 @@ type ExtractionResult = MessagePayloads[typeof MESSAGES.EXTRACTION_RESULT];
 const TRIGGER_MAX_RETRIES = 3;
 
 chrome.runtime.onInstalled.addListener(() => {
-    console.log("Extension installed");
-
-    // sessinoStorage access is enabled by default everywhere
-    chrome.storage.session.setAccessLevel({
-        accessLevel: "TRUSTED_AND_UNTRUSTED_CONTEXTS",
-    });
-
     // Side panel action click disabled by default
     chrome.sidePanel
         .setPanelBehavior({ openPanelOnActionClick: false })
@@ -31,40 +24,8 @@ chrome.runtime.onInstalled.addListener(() => {
 chrome.action.onClicked.addListener(async (tab) => {
     // This site url trigger onClicked event means
     // that current url can open side panel
-    if (tab.id && tab.url) {
-        await chrome.sidePanel.open({ tabId: tab.id });
-    }
+    if (tab.id && tab.url) await chrome.sidePanel.open({ tabId: tab.id });
 });
-
-// Trigger extraction with debounce, including injection fallback and retries
-const triggerExtraction = async (tabId: number, url: string) => {
-    let attempt = 0;
-    while (attempt < TRIGGER_MAX_RETRIES) {
-        try {
-            const response = await chrome.tabs.sendMessage(tabId, {
-                type: MESSAGES.EXTRACT_CONTENT,
-                payload: { url },
-            } as {
-                type: typeof MESSAGES.EXTRACT_CONTENT;
-                payload: MessagePayloads[typeof MESSAGES.EXTRACT_CONTENT];
-            });
-            return response; // Success, exit loop
-        } catch (error) {
-            console.log("Content is not injected attept is ", attempt);
-            const isListenerReady = await ensureContentInjected(tabId);
-            if (!isListenerReady) {
-                attempt++;
-                continue;
-            }
-            return;
-        }
-    }
-    console.error("Max retries exceeded for extraction trigger.");
-};
-
-// Cache config
-const MAX_CACHE_ENTRIES = 50;
-const CACHE_KEYS_KEY = "cache_keys"; // Metadata key for FIFO queue
 
 // Debounce function for throttling extractions
 function debounce<T extends (...args: any[]) => any>(
@@ -89,7 +50,7 @@ chrome.runtime.onMessage.addListener(
         sendResponse
     ) => {
         (async () => {
-            if (message.type === MESSAGES.GET_LATEST_CONTENT) {
+            if (message.type === MESSAGES.REQUEST_CONTENT) {
                 const { tabId, url } = message.payload;
                 const cached = await getCachedContent(url);
                 if (cached) {
@@ -100,7 +61,7 @@ chrome.runtime.onMessage.addListener(
                     });
                 } else {
                     // Trigger extraction if cache empty
-                    const isInjected = await injectContentScript(tabId); // Ensure injected before trigger
+                    const isInjected = await ensureContentScriptInjected(tabId);
                     if (isInjected) {
                         const result = await triggerExtraction(tabId, url);
                         await setCachedContent(result.payload, url);
@@ -138,77 +99,114 @@ chrome.runtime.onMessage.addListener(
     }
 );
 
-// <Improvement requirement>
-// We can integrate this two logic (injectContentScript and ensureContentInjected)
-// Let's Craft cleaner code for improving readability
-
-// Helper to inject content script programmatically
-async function injectContentScript(tabId: number): Promise<boolean> {
-    // <Improvement requirement>
-    // Is try catch syntax is needed? What error can occurred in this code base?
-    // </Improvement requirement>
+/**
+ * Triggers the content extraction in the specified tab.
+ * This function assumes that the content script is already injected and ready.
+ * It should be called after a successful check from `ensureContentScriptInjected`.
+ *
+ * @param tabId The ID of the tab to trigger extraction in.
+ * @param url The URL of the page, passed to the content script.
+ * @returns A promise that resolves with the extraction result from the content script.
+ */
+const triggerExtraction = async (tabId: number, url: string) => {
     try {
-        const injectionResults = await chrome.scripting.executeScript({
+        const response = await chrome.tabs.sendMessage(tabId, {
+            type: MESSAGES.EXTRACT_CONTENT,
+            payload: { url },
+        });
+        return response;
+    } catch (error) {
+        console.error(
+            `Failed to send EXTRACT_CONTENT message to tab ${tabId}:`,
+            error
+        );
+        // No retry here. The onMessage listener ensures the script is ready.
+        // A failure at this stage points to a more significant problem.
+        return {
+            type: MESSAGES.EXTRACTION_RESULT,
+            payload: {
+                status: "error",
+                message: "Failed to communicate with content script.",
+            },
+        };
+    }
+};
+
+/**
+ * Ensures the content script is injected and ready to receive messages.
+ *
+ * This function first tries to ping the content script. If the ping fails,
+ * it injects the script and pings again. This handles cases where the script
+ * might not have been automatically injected or has become inactive.
+ * The try-catch block is crucial for handling errors that can occur if the
+ * extension attempts to inject a script into a restricted page (e.g., chrome:// pages)
+ * or a tab that no longer exists. And invalid tab ID, or if the extension lacks host
+   permissions for the target URL. The try...catch ensures these errors are handled gracefully
+   without crashing the extension.
+ *
+ * @param tabId The ID of the tab to ensure the script is injected into.
+ * @returns A promise that resolves to true if the script is ready, false otherwise.
+ */
+async function ensureContentScriptInjected(tabId: number): Promise<boolean> {
+    try {
+        // First, try to ping the content script to see if it's already there and listening.
+        const response = await chrome.tabs.sendMessage(tabId, {
+            type: MESSAGES.PING,
+        });
+        if (response?.ok) {
+            return true; // Script is already injected and active.
+        }
+    } catch (e) {
+        // An error here likely means the content script isn't injected, which is expected.
+        console.log("Content script ping failed, attempting to inject...");
+    }
+
+    try {
+        // If the ping fails, inject the script.
+        await chrome.scripting.executeScript({
             target: { tabId },
             files: ["content.js"],
         });
 
-        if (injectionResults.length > 0) {
-            console.log(
-                "Content script injected successfully into tab:",
-                injectionResults
-            );
-            // Ping to content script
-            const response = await chrome.tabs.sendMessage(tabId, {
-                type: MESSAGES.PING,
-            });
-            return response.ok;
-        }
-
-        return false;
+        // After injecting, ping again to confirm it's ready.
+        const response = await chrome.tabs.sendMessage(tabId, {
+            type: MESSAGES.PING,
+        });
+        return response?.ok || false;
     } catch (error) {
-        console.error("Failed to inject content script:", error);
+        console.error(
+            `Failed to inject or communicate with content script in tab ${tabId}:`,
+            error
+        );
         return false;
     }
 }
-
-async function ensureContentInjected(tabId: number): Promise<boolean> {
-    const response = await chrome.tabs.sendMessage(tabId, {
-        type: MESSAGES.PING,
-    });
-    if (response.ok) return true;
-
-    const isInjected = await injectContentScript(tabId);
-    if (!isInjected) {
-        return false;
-    }
-    return await chrome.tabs.sendMessage(tabId, { type: MESSAGES.PING });
-}
-
-// </Improvement requirement>
-
 
 // SPA navigation listener
 chrome.webNavigation.onHistoryStateUpdated.addListener(async (details) => {
     const cached = await getCachedContent(details.url);
-    console.log("isCached > ", cached);
     if (cached) {
         console.log("web navigation cached :", cached);
-
         chrome.runtime.sendMessage({
             type: MESSAGES.UPDATE_VIEW,
             payload: { content: cached },
         });
         return;
     }
-    const extractedResponse = await triggerExtraction(
-        details.tabId,
-        details.url
-    );
 
-    setCachedContent(extractedResponse.payload.content.body, details.url);
-    chrome.runtime.sendMessage({
-        type: MESSAGES.UPDATE_VIEW,
-        payload: { content: extractedResponse.payload.content.body },
-    });
+    // Ensure the content script is ready before triggering extraction
+    const isReady = await ensureContentScriptInjected(details.tabId);
+    if (isReady) {
+        const extractedResponse = await triggerExtraction(
+            details.tabId,
+            details.url
+        );
+        if (extractedResponse?.payload?.status === "success") {
+            setCachedContent(extractedResponse.payload, details.url);
+            chrome.runtime.sendMessage({
+                type: MESSAGES.UPDATE_VIEW,
+                payload: { content: extractedResponse.payload },
+            });
+        }
+    }
 }, geminiNavigationFilter);

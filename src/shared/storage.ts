@@ -1,21 +1,17 @@
-// /src/shared/storage.ts
-const keyForTab = (tabId: number) => `content:${tabId}`;
+const cachedKey = (url: string) => `prompts_${url}`;
 
-export async function getCachedContent(tabId: number): Promise<string | null> {
-    const key = keyForTab(tabId);
+export async function getCachedContent(url: string): Promise<any | null> {
+    const key = cachedKey(url);
     const res = await chrome.storage.session.get(key);
     return (res?.[key] as string | undefined) ?? null;
 }
 
-export async function setCachedContent(
-    tabId: number,
-    data: string
-): Promise<void> {
-    const key = keyForTab(tabId);
+export async function setCachedContent(data: any, url: string): Promise<void> {
+    const key = cachedKey(url);
     await chrome.storage.session.set({ [key]: data });
 }
 
-export async function clearCachedContent(tabId: number): Promise<void> {
-    const key = keyForTab(tabId);
+export async function clearCachedContent(url: string): Promise<void> {
+    const key = cachedKey(url);
     await chrome.storage.session.remove(key);
 }

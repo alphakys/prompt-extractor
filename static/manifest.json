@@ -2,13 +2,17 @@
     "manifest_version": 3,
     "name": "Side Panel Content Extractor",
     "version": "0.1.0",
-    "action": {},
+    "action": {
+        "default_title": "Open Side Panel",
+        "default_state": "disabled"
+    },
     "permissions": [
         "storage",
         "tabs",
         "sidePanel",
         "webNavigation",
-        "scripting"
+        "scripting",
+        "declarativeContent"
     ],
     "host_permissions": [
         "https://gemini.google.com/*"
@@ -28,7 +32,7 @@
             "js": [
                 "content.js"
             ],
-            "run_at": "document_start"
+            "run_at": "document_idle"
         }
     ]
 }

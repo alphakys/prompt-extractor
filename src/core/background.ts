@@ -52,20 +52,47 @@ chrome.runtime.onMessage.addListener(
         (async () => {
             if (message.type === MESSAGES.REQUEST_CONTENT) {
                 const { tabId, url } = message.payload;
-                const cached = await getCachedContent(url);
-                if (cached) {
-                    console.log("Cache is hit : ", cached);
+
+                const isReady = await ensureContentScriptInjected(tabId);
+                if (!isReady) {
+                    // Handle cases where injection fails
                     sendResponse({
                         type: MESSAGES.UPDATE_VIEW,
-                        payload: { content: cached },
+                        payload: {
+                            content: {
+                                status: "error",
+                                message: "Could not connect to the page.",
+                            },
+                        },
                     });
-                } else {
-                    // Trigger extraction if cache empty
-                    const isInjected = await ensureContentScriptInjected(tabId);
-                    if (isInjected) {
-                        const result = await triggerExtraction(tabId, url);
-                        await setCachedContent(result.payload, url);
+                    return;
+                }
 
+                const cached = await getCachedContent(url);
+
+                if (cached) {
+                    console.log("Cache is hit. Validating DOM tags...", cached);
+                    // Cache exists, but we need to ensure the DOM is tagged.
+                    const response = await chrome.tabs.sendMessage(tabId, {
+                        type: MESSAGES.VALIDATE_CACHE_AND_TAG_DOM,
+                        payload: { cachedData: cached },
+                    });
+
+                    if (response?.ok) {
+                        // DOM is tagged, we can use the cache.
+                        sendResponse({
+                            type: MESSAGES.UPDATE_VIEW,
+                            payload: { content: cached },
+                        });
+                        return;
+                    }
+                    // If validation fails, the content script will automatically re-extract.
+                    // We just need to wait for the EXTRACTION_RESULT.
+                } else {
+                    // No cache, so trigger a fresh extraction.
+                    const result = await triggerExtraction(tabId, url);
+                    if (result.payload.status !== "error") {
+                        await setCachedContent(result.payload, url);
                         sendResponse({
                             type: MESSAGES.UPDATE_VIEW,
                             payload: { content: result.payload },
@@ -73,26 +100,20 @@ chrome.runtime.onMessage.addListener(
                     }
                 }
             } else if (message.type === MESSAGES.EXTRACTION_RESULT) {
-                // const tabId = sender.tab?.id ?? 0;
-                // if (tabId === 0) return;
-                // const sessionKey = `prompt_${url}`;
-                // if (message.payload.status === "success") {
-                //     await evictOldestCache();
-                //     const { [CACHE_KEYS_KEY]: keys = [] } =
-                //         await chrome.storage.session.get(CACHE_KEYS_KEY);
-                //     keys.push(sessionKey);
-                //     await chrome.storage.session.set({
-                //         [sessionKey]: message.payload,
-                //         [CACHE_KEYS_KEY]: keys,
-                //     });
-                //     // Update side panel
-                //     await chrome.runtime.sendMessage({
-                //         type: MESSAGES.UPDATE_VIEW,
-                //         payload: {
-                //             content: message.payload,
-                //         },
-                //     });
-                // }
+                // This message now also comes from the cache validation flow
+                if (sender.tab?.url) {
+                    await setCachedContent(message.payload, sender.tab.url);
+                    // Forward the fresh data to the side panel
+                    chrome.runtime.sendMessage({
+                        type: MESSAGES.UPDATE_VIEW,
+                        payload: { content: message.payload },
+                    });
+                }
+            } else if (message.type === MESSAGES.FOCUS_ELEMENT) {
+                // Forward the focus message to the content script
+                if (sender.tab?.id) {
+                    chrome.tabs.sendMessage(sender.tab.id, message);
+                }
             }
         })();
         return true; // Async response
@@ -183,30 +204,33 @@ async function ensureContentScriptInjected(tabId: number): Promise<boolean> {
 }
 
 // SPA navigation listener
-chrome.webNavigation.onHistoryStateUpdated.addListener(async (details) => {
-    const cached = await getCachedContent(details.url);
-    if (cached) {
-        console.log("web navigation cached :", cached);
-        chrome.runtime.sendMessage({
-            type: MESSAGES.UPDATE_VIEW,
-            payload: { content: cached },
-        });
-        return;
-    }
-
-    // Ensure the content script is ready before triggering extraction
-    const isReady = await ensureContentScriptInjected(details.tabId);
-    if (isReady) {
-        const extractedResponse = await triggerExtraction(
-            details.tabId,
-            details.url
-        );
-        if (extractedResponse?.payload?.status === "success") {
-            setCachedContent(extractedResponse.payload, details.url);
+chrome.webNavigation.onHistoryStateUpdated.addListener(
+    debounce(async (details) => {
+        const cached = await getCachedContent(details.url);
+        if (cached) {
             chrome.runtime.sendMessage({
                 type: MESSAGES.UPDATE_VIEW,
-                payload: { content: extractedResponse.payload },
+                payload: { content: cached },
             });
+            return;
         }
-    }
-}, geminiNavigationFilter);
+
+        // Ensure the content script is ready before triggering extraction
+        const isReady = await ensureContentScriptInjected(details.tabId);
+        if (isReady) {
+            const extractedResponse = await triggerExtraction(
+                details.tabId,
+                details.url
+            );
+            if (extractedResponse?.payload?.status === "success") {
+
+                setCachedContent(extractedResponse.payload, details.url);
+                chrome.runtime.sendMessage({
+                    type: MESSAGES.UPDATE_VIEW,
+                    payload: { content: extractedResponse.payload },
+                });
+            }
+        }
+    }, 500),
+    geminiNavigationFilter
+);

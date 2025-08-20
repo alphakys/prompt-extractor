@@ -1,49 +1,125 @@
-/* sidepanel.css */
+/* ===== Global Styles ===== */
 body {
-  font-family: sans-serif;
-  padding: 10px;
-  background-color: #f9f9f9;
-  color: #333;
-  min-width: 300px; /* Ensure the panel has some width */
+    font-family:
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        sans-serif;
+    background: linear-gradient(180deg, #fafafa 0%, #f0f0f0 100%);
+    margin: 0;
+    padding: 2rem;
+    color: #222;
 }
 
-.container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100px;
+.card-list {
+    display: grid;
+    gap: 16px;
+    max-width: 800px;
+    margin: auto;
 }
 
-#content {
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  width: 100%;
+/* ===== Card Container ===== */
+.card {
+    background: #fff;
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
 }
 
-/* Loading Spinner */
+.card h3 {
+    margin: 0 0 8px 0;
+    font-size: 1.25rem;
+}
+
+.card-content {
+    overflow: hidden;
+    transition: height 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Truncation - exactly 3 lines */
+.card-content.truncated {
+    display: -webkit-box;
+    -webkit-line-clamp: 3; /* shows 3 lines before truncating */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* ===== Action Buttons ===== */
+.card-actions {
+    margin-top: 8px;
+    display: flex;
+    justify-content: space-between; /* left & right groups */
+    align-items: center;
+}
+
+.action-group {
+    display: flex;
+    gap: 8px;
+}
+
+.action-btn {
+    background: none;
+    border: none;
+    color: #908161;
+    font-size: 0.95rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 4px;
+}
+
+.action-btn:focus {
+    outline: 2px solid #d35400;
+    outline-offset: 2px;
+}
+
+.action-btn svg {
+    width: 1em;
+    height: 1em;
+    transition: transform 200ms ease;
+}
+
+.toggle-btn[aria-expanded="true"] svg {
+    transform: rotate(180deg);
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 600px) {
+    .card {
+        padding: 12px;
+    }
+}
+
+/* ===== Loader and Error Message ===== */
 .loader {
-  border: 4px solid #f3f3f3; /* Light grey */
-  border-top: 4px solid #3498db; /* Blue */
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  animation: spin 2s linear infinite;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #d35400;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 2s linear infinite;
+    margin: 20px auto;
+    display: none;
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
-/* Error Message */
 .error-message {
-  color: #d8000c; /* Red */
-  background-color: #ffbaba; /* Light red */
-  border: 1px solid;
-  margin: 10px 0px;
-  padding: 15px 10px 15px 10px;
-  border-radius: 5px;
-  width: 100%;
-  text-align: center;
+    color: #e74c3c;
+    text-align: center;
+    padding: 20px;
+    display: none;
 }

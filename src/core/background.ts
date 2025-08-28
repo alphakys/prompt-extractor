@@ -6,14 +6,14 @@ import { getCachedContent, setCachedContent } from "../shared/storage";
 // Type aliases for clarity (assume from types.ts)
 type ExtractionResult = MessagePayloads[typeof MESSAGES.EXTRACTION_RESULT];
 const TRIGGER_MAX_RETRIES = 3;
+let isSidepanelOpened = false;
 
 chrome.runtime.onInstalled.addListener(() => {
-    // Side panel action click disabled by default
     chrome.sidePanel
         .setPanelBehavior({ openPanelOnActionClick: false })
-        .catch((error) =>
-            console.error("<onInstalled> something wrong: ", error)
-        );
+        .catch((error) => {
+            console.error("<onInstalled> something wrong: ", error);
+        });
 
     chrome.declarativeContent.onPageChanged.removeRules(undefined, () => {
         chrome.declarativeContent.onPageChanged.addRules([geminiUrlFilterRule]);
@@ -24,7 +24,9 @@ chrome.runtime.onInstalled.addListener(() => {
 chrome.action.onClicked.addListener(async (tab) => {
     // This site url trigger onClicked event means
     // that current url can open side panel
-    if (tab.id && tab.url) await chrome.sidePanel.open({ tabId: tab.id });
+    if (tab.id && tab.url) {
+        await chrome.sidePanel.open({ tabId: tab.id });
+    }
 });
 
 // Debounce function for throttling extractions
@@ -174,6 +176,7 @@ async function ensureContentScriptInjected(tabId: number): Promise<boolean> {
         const response = await chrome.tabs.sendMessage(tabId, {
             type: MESSAGES.PING,
         });
+
         if (response?.ok) {
             return true; // Script is already injected and active.
         }
@@ -206,6 +209,14 @@ async function ensureContentScriptInjected(tabId: number): Promise<boolean> {
 // SPA navigation listener
 chrome.webNavigation.onHistoryStateUpdated.addListener(
     debounce(async (details) => {
+        try {
+            await chrome.runtime.sendMessage({
+                type: MESSAGES.PING,
+            });
+        } catch (err) {
+            return;
+        }
+
         const cached = await getCachedContent(details.url);
         if (cached) {
             chrome.runtime.sendMessage({
@@ -223,8 +234,8 @@ chrome.webNavigation.onHistoryStateUpdated.addListener(
                 details.url
             );
             if (extractedResponse?.payload?.status === "success") {
-
                 setCachedContent(extractedResponse.payload, details.url);
+
                 chrome.runtime.sendMessage({
                     type: MESSAGES.UPDATE_VIEW,
                     payload: { content: extractedResponse.payload },

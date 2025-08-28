@@ -15,5 +15,9 @@ export const config = {
             // The main container for the chat content.
             promptContainer: "span.user-query-bubble-with-background",
         },
+        openai: {
+            // The main container for the chat content.
+            promptContainer: "user-message-bubble-color",
+        },
     },
 };

@@ -10,6 +10,7 @@ declare global {
     }
 }
 
+console.log("Console: Content script is injected");
 // Registry of extractors (expand by adding more imports/classes)
 const extractors: IExtractor[] = [new GeminiExtractor()];
 
@@ -34,7 +35,6 @@ if (!window.__SIDE_PANEL_EXTRACTOR_LOADED__) {
                 }
 
                 if (message.type === MESSAGES.FOCUS_ELEMENT) {
-                    console.log("Focus Element : ", message.payload.elementId);
                     handleFocus(message.payload.elementId);
                     return;
                 }
@@ -95,7 +95,6 @@ function handleFocus(elementId: string): void {
         `[data-gemini-prompt-id="${elementId}"]`
     ) as HTMLElement;
 
-    console.log("handle Focus", element);
     if (element) {
         element.scrollIntoView({ behavior: "smooth", block: "center" });
 
@@ -119,8 +118,6 @@ function tagDom(extractionResult: ExtractionResult): void {
         const promptId = `prompt-${index}`;
         (container as HTMLElement).dataset.geminiPromptId = promptId;
     });
-
-    console.log("DOM tagged successfully.");
 }
 
 function handleValidationAndTagging(cachedData: ExtractionResult): boolean {
@@ -139,7 +136,6 @@ function handleValidationAndTagging(cachedData: ExtractionResult): boolean {
     // The DOM looks valid, so we can re-tag the elements.
     tagDom(cachedData);
 
-    console.log("DOM re-tagged successfully from cache.");
     return true;
 }
 
@@ -157,7 +153,11 @@ async function extractWithRetry(
                 const timeout = 5000; // 5s timeout
 
                 function poll() {
-                    if (document.querySelector(config.SELECTORS.gemini.promptContainer)) {
+                    if (
+                        document.querySelector(
+                            config.SELECTORS.gemini.promptContainer
+                        )
+                    ) {
                         resolve();
                     } else if (Date.now() - startTime > timeout) {
                         reject(new Error("DOM readiness timeout"));

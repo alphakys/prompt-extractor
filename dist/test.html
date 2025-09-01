@@ -1,0 +1,243 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extracted Content</title>
+    <link rel="stylesheet" href="./sidepanel.css">
+    <style>
+        /* Injected CSS for Design Polish */
+        :root {
+            --brand-color: #4A90E2; /* A modern, friendly blue */
+            --brand-color-hover: #357ABD;
+            --focus-ring-color: rgba(74, 144, 226, 0.5);
+        }
+
+        .action-group {
+            gap: 12px; /* Increased spacing between buttons */
+        }
+
+        .action-btn {
+            transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+
+        .action-btn:focus-visible {
+            outline: none;
+            box-shadow: 0 0 0 3px var(--focus-ring-color); /* Custom focus ring */
+        }
+
+        .action-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+    </style>
+
+</head>
+
+<body>
+    <div class="container">
+        <!-- Error message, hidden by default -->
+        <div id="error" class="error-message"></div>
+    </div>
+
+    <!-- Loading spinner, shown by default -->
+    <div id="loading" class="loader" hidden=""></div>
+
+    <div class="card-list">
+        <div class="card" data-prompt-id="prompt-0">
+            <h3>prompt-0</h3>
+            <div class="card-content truncated" id="prompt-0">
+                <p>Intro</p>
+                <p>This is a set of color schemes for iTerm (aka iTerm2). It also includes ports to Terminal, Konsole,
+                    PuTTY, Xresources, XRDB, Remmina, Termite, XFCE, Tilda, FreeBSD VT, Terminator, Kitty, Ghostty,
+                    MobaXterm, LXTerminal, Microsoft's Windows Terminal, Visual Studio, Alacritty</p>
+                <p>Screenshots below and in the&nbsp;screenshots&nbsp;directory.</p>
+                <p>Installation Instructions</p>
+                <p>There are 3 ways to install an iTerm theme:</p>
+                <p>Direct way via keyboard shortcut:</p>
+                <p>Launch iTerm 2. Get the latest version at&nbsp;iterm2.com</p>
+                <p>Type CMD+i (⌘+i)</p>
+                <p>Navigate to&nbsp;Colors&nbsp;tab</p>
+                <p>Click on&nbsp;Color Presets</p>
+                <p>Click on&nbsp;Import</p>
+                <p>Click on the&nbsp;schemes&nbsp;folder</p>
+                <p>Select the&nbsp;.itermcolors&nbsp;profiles you would like to import</p>
+                <p>Click on&nbsp;Color Presets&nbsp;and choose a color scheme</p>
+                <p>Via iTerm preferences (go to the same configuration location as above):</p>
+                <p>Launch iTerm 2. Get the latest version at&nbsp;iterm2.com</p>
+                <p>Click on&nbsp;iTerm2&nbsp;menu title</p>
+                <p>Select&nbsp;Preferences...&nbsp;option</p>
+                <p>Select&nbsp;Profiles</p>
+                <p>Navigate to&nbsp;Colors&nbsp;tab</p>
+                <p>Click on&nbsp;Color Presets</p>
+                <p>Click on&nbsp;Import</p>
+                <p>Select the .itermcolors file(s) of the&nbsp;schemes&nbsp;you'd like to use * Click on&nbsp;Color
+                    Presets&nbsp;and choose a color scheme</p>
+                <p>Via Bash script</p>
+                <p>Launch iTerm 2. Get the latest version at&nbsp;iterm2.com</p>
+                <p>Run the following command:</p>
+                <p># Import all color schemes</p>
+                <p>tools/import-scheme.sh schemes/*# Import all color schemes (verbose mode)</p>
+                <p>tools/import-scheme.sh -v schemes/*# Import specific color schemes (quotations are needed for schemes
+                    with spaces in name)</p>
+                <p>tools/import-scheme.sh 'schemes/SpaceGray Eighties.itermcolors' # by file path</p>
+                <p>tools/import-scheme.sh 'SpaceGray Eighties' # by scheme name</p>
+                <p>tools/import-scheme.sh Molokai 'SpaceGray Eighties' # import multiple</p>
+                <p>This is iTerm2 documentation which elaborated how to install iTerm theme.</p>
+                <p>I can't understand what it means number 3 way of installing theme.</p>
+                <p>I can't execute tools command on my iTerm terminal. Let's break down step by steps</p>
+            </div>
+            <div class="card-actions">
+                <div class="action-group"><button class="action-btn toggle-btn" aria-expanded="false"
+                        aria-controls="prompt-0">More <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M6 9l6 6 6-6"></path>
+                        </svg></button></div>
+                <div class="action-group"><button class="action-btn copy-btn">Copy <svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg></button><button class="action-btn move-btn">Move <svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <circle cx="9" cy="5" r="1.5"></circle>
+                            <circle cx="15" cy="5" r="1.5"></circle>
+                            <circle cx="9" cy="12" r="1.5"></circle>
+                            <circle cx="15" cy="12" r="1.5"></circle>
+                            <circle cx="9" cy="19" r="1.5"></circle>
+                            <circle cx="15" cy="19" r="1.5"></circle>
+                        </svg></button></div>
+            </div>
+        </div>
+        <div class="card" data-prompt-id="prompt-1">
+            <h3>prompt-1</h3>
+            <div class="card-content truncated" id="prompt-1">
+                <p>I see. I have got it. So all installation method is stated on under condition that I've already
+                    downloaded iTerm color scheme right?</p>
+                <p>But I don't want to install all color schemes I just wanna download just one theme then where I
+                    download the only one theme?</p>
+            </div>
+            <div class="card-actions">
+                <div class="action-group"><button class="action-btn toggle-btn" aria-expanded="false"
+                        aria-controls="prompt-1">More <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M6 9l6 6 6-6"></path>
+                        </svg></button></div>
+                <div class="action-group"><button class="action-btn copy-btn">Copy <svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg></button><button class="action-btn move-btn">Move <svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <circle cx="9" cy="5" r="1.5"></circle>
+                            <circle cx="15" cy="5" r="1.5"></circle>
+                            <circle cx="9" cy="12" r="1.5"></circle>
+                            <circle cx="15" cy="12" r="1.5"></circle>
+                            <circle cx="9" cy="19" r="1.5"></circle>
+                            <circle cx="15" cy="19" r="1.5"></circle>
+                        </svg></button></div>
+            </div>
+        </div>
+        <div class="card" data-prompt-id="prompt-2">
+            <h3>prompt-2</h3>
+            <div class="card-content truncated" id="prompt-2">
+                <p>How about install on '~/Library/Application Support/iTerm2' directory?</p>
+                <p>And go through the role and objective of this directory in iTerm application</p>
+            </div>
+            <div class="card-actions">
+                <div class="action-group"><button class="action-btn copy-btn">Copy <svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg></button><button class="action-btn move-btn">Move <svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <circle cx="9" cy="5" r="1.5"></circle>
+                            <circle cx="15" cy="5" r="1.5"></circle>
+                            <circle cx="9" cy="12" r="1.5"></circle>
+                            <circle cx="15" cy="12" r="1.5"></circle>
+                            <circle cx="9" cy="19" r="1.5"></circle>
+                            <circle cx="15" cy="19" r="1.5"></circle>
+                        </svg></button></div>
+            </div>
+        </div>
+        <div class="card" data-prompt-id="prompt-3">
+            <h3>prompt-3</h3>
+            <div class="card-content truncated" id="prompt-3">
+                <p>Okay I see.! So I will avoid installing themes on ~/Library/Appilcation Support/iTerm2</p>
+                <p>Then I think ~/Library directory is role of ~/.local/share directory on Linux OS right?</p>
+                <p>So I think it is better located the theme on ~/Library/Colors or create another directory to save the
+                    theme how about this solution?</p>
+            </div>
+            <div class="card-actions">
+                <div class="action-group"><button class="action-btn toggle-btn" aria-expanded="false"
+                        aria-controls="prompt-3">More <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M6 9l6 6 6-6"></path>
+                        </svg></button></div>
+                <div class="action-group"><button class="action-btn copy-btn">Copy <svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg></button><button class="action-btn move-btn">Move <svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <circle cx="9" cy="5" r="1.5"></circle>
+                            <circle cx="15" cy="5" r="1.5"></circle>
+                            <circle cx="9" cy="12" r="1.5"></circle>
+                            <circle cx="15" cy="12" r="1.5"></circle>
+                            <circle cx="9" cy="19" r="1.5"></circle>
+                            <circle cx="15" cy="19" r="1.5"></circle>
+                        </svg></button></div>
+            </div>
+        </div>
+        <div class="card" data-prompt-id="prompt-4">
+            <h3>prompt-4</h3>
+            <div class="card-content truncated" id="prompt-4">
+                <p>I want to move directories from source directory to target directory as source directorie name is
+                    kept original</p>
+            </div>
+            <div class="card-actions">
+                <div class="action-group"><button class="action-btn copy-btn">Copy <svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg></button><button class="action-btn move-btn">Move <svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <circle cx="9" cy="5" r="1.5"></circle>
+                            <circle cx="15" cy="5" r="1.5"></circle>
+                            <circle cx="9" cy="12" r="1.5"></circle>
+                            <circle cx="15" cy="12" r="1.5"></circle>
+                            <circle cx="9" cy="19" r="1.5"></circle>
+                            <circle cx="15" cy="19" r="1.5"></circle>
+                        </svg></button></div>
+            </div>
+        </div>
+        <div class="card" data-prompt-id="prompt-5">
+            <h3>prompt-5</h3>
+            <div class="card-content truncated" id="prompt-5">
+                <p>I want to use change char on zsh.</p>
+                <p>e.g. $USER(alpha) change to 'Alpha'</p>
+                <p>Let me elaborate with detailed example.</p>
+                <p>$USER is alpha so I want to change 'alpha' to 'Alpha' how it could be possible on zsh?</p>
+            </div>
+            <div class="card-actions">
+                <div class="action-group"><button class="action-btn copy-btn">Copy <svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg></button><button class="action-btn move-btn">Move <svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <circle cx="9" cy="5" r="1.5"></circle>
+                            <circle cx="15" cy="5" r="1.5"></circle>
+                            <circle cx="9" cy="12" r="1.5"></circle>
+                            <circle cx="15" cy="12" r="1.5"></circle>
+                            <circle cx="9" cy="19" r="1.5"></circle>
+                            <circle cx="15" cy="19" r="1.5"></circle>
+                        </svg></button></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="./sidepanel.js" type="module"></script>
+
+</body>
+
+</html>

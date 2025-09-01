@@ -3,3 +3,8 @@
 
 # Build output
 /dist
+
+# Gemini Cli configuration
+.gemini
+.gemini/
+gha-creds-*.json

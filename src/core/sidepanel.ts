@@ -1,5 +1,6 @@
 import { MESSAGES, MessagePayloads } from "../shared/messages";
 import { PromptData } from "../shared/types";
+import { detectPlatform } from "./content";
 
 // On load, request content
 document.addEventListener("DOMContentLoaded", async () => {
@@ -102,7 +103,7 @@ function createCard(prompt: PromptData): HTMLDivElement {
         toggleBtn.className = "action-btn toggle-btn";
         toggleBtn.setAttribute("aria-expanded", "false");
         toggleBtn.setAttribute("aria-controls", wrapper.id);
-        toggleBtn.innerHTML = `More <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>`;
+        toggleBtn.innerHTML = `View More <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>`;
         leftGroup.appendChild(toggleBtn);
         actionsDiv.appendChild(leftGroup);
     }
@@ -154,8 +155,8 @@ document.addEventListener("click", (event) => {
             const isTruncated = wrapper.classList.toggle("truncated");
             actionBtn.setAttribute("aria-expanded", String(!isTruncated));
             actionBtn.innerHTML = !isTruncated
-                ? `Less <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 15l-6-6-6 6"/></svg>`
-                : `More <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>`;
+                ? `View Less <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 15l-6-6-6 6"/></svg>`
+                : `View More <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>`;
         }
     }
 
@@ -185,12 +186,16 @@ document.addEventListener("click", (event) => {
 
     // Handle Move Button
     if (actionBtn.classList.contains("move-btn")) {
-        console.log(`Move card ${promptId} functionality would go here`);
 
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
             const tabId = tabs[0].id;
             if (!tabId) return;
 
+            const platform = detectPlatform(tabs[0].url ?? "");
+
+            if (!platform) return;
+
+            console.log("Moving element with id: ", promptId);
             chrome.tabs.sendMessage(tabId, {
                 type: MESSAGES.FOCUS_ELEMENT,
                 payload: { elementId: promptId },

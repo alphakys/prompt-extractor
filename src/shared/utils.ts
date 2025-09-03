@@ -3,17 +3,25 @@ const geminiUrlFilter: chrome.events.UrlFilter = {
     pathPrefix: "/app/",
 };
 
-const actionUrlCondition = [
+const chatGPTUrlFilter: chrome.events.UrlFilter = {
+    hostEquals: "chatgpt.com",
+    pathPrefix: "/c/",
+};
+
+const actionUrlConditions = [
     new chrome.declarativeContent.PageStateMatcher({
         pageUrl: geminiUrlFilter,
     }),
+    new chrome.declarativeContent.PageStateMatcher({
+        pageUrl: chatGPTUrlFilter,
+    }),
 ];
 
-export const geminiUrlFilterRule = {
-    conditions: actionUrlCondition,
+export const urlFilterRule = {
+    conditions: actionUrlConditions,
     actions: [new chrome.declarativeContent.ShowAction()],
 };
 
-export const geminiNavigationFilter: chrome.webNavigation.WebNavigationEventFilter = {
-    url: [geminiUrlFilter],
+export const navigationFilter: chrome.webNavigation.WebNavigationEventFilter = {
+    url: [geminiUrlFilter, chatGPTUrlFilter],
 };

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { GeminiExtractor } from './geminiExtractor';
+import { GeminiExtractor } from './promptExtractors';
 import { config } from '../shared/config';
 
 describe('GeminiExtractor', () => {

@@ -6,7 +6,7 @@
  */
 export const config = {
     // URL patterns to match the sites this extension works on.
-    ALLOWED_URL: ["https://gemini.google.com/app/"],
+    ALLOWED_URL: ["https://gemini.google.com/app/", "https://chatgpt.com/c/"],
 
     // A map of CSS selectors for different sites.
     SELECTORS: {
@@ -17,7 +17,8 @@ export const config = {
         },
         openai: {
             // The main container for the chat content.
-            promptContainer: "user-message-bubble-color",
+            // Select the user message wrapper nodes; robust to minor UI changes
+            promptContainer: 'div[data-message-author-role="user"]',
         },
     },
 };

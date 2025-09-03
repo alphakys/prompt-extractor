@@ -1,9 +1,8 @@
-// src/ts/background.ts (Updated with delay and retries to resolve timing issue)
 import { MESSAGES, MessagePayloads } from "../shared/messages";
-import { config } from "../shared/config";
-import { geminiUrlFilterRule, geminiNavigationFilter } from "../shared/utils";
+import { urlFilterRule, navigationFilter } from "../shared/utils";
 import { getCachedContent, setCachedContent } from "../shared/storage";
-// Type aliases for clarity (assume from types.ts)
+import { classRegistry } from "happy-dom/lib/PropertySymbol";
+
 type ExtractionResult = MessagePayloads[typeof MESSAGES.EXTRACTION_RESULT];
 const TRIGGER_MAX_RETRIES = 3;
 let isSidepanelOpened = false;
@@ -12,11 +11,11 @@ chrome.runtime.onInstalled.addListener(() => {
     chrome.sidePanel
         .setPanelBehavior({ openPanelOnActionClick: false })
         .catch((error) => {
-            console.error("<onInstalled> something wrong: ", error);
+            console.error("[onInstalled]: ", error);
         });
 
     chrome.declarativeContent.onPageChanged.removeRules(undefined, () => {
-        chrome.declarativeContent.onPageChanged.addRules([geminiUrlFilterRule]);
+        chrome.declarativeContent.onPageChanged.addRules([urlFilterRule]);
     });
 });
 
@@ -57,7 +56,6 @@ chrome.runtime.onMessage.addListener(
 
                 const isReady = await ensureContentScriptInjected(tabId);
                 if (!isReady) {
-                    // Handle cases where injection fails
                     sendResponse({
                         type: MESSAGES.UPDATE_VIEW,
                         payload: {
@@ -73,11 +71,9 @@ chrome.runtime.onMessage.addListener(
                 const cached = await getCachedContent(url);
 
                 if (cached) {
-                    console.log("Cache is hit. Validating DOM tags...", cached);
-                    // Cache exists, but we need to ensure the DOM is tagged.
                     const response = await chrome.tabs.sendMessage(tabId, {
                         type: MESSAGES.VALIDATE_CACHE_AND_TAG_DOM,
-                        payload: { cachedData: cached },
+                        payload: { cachedData: cached, url },
                     });
 
                     if (response?.ok) {
@@ -118,7 +114,7 @@ chrome.runtime.onMessage.addListener(
                 }
             }
         })();
-        return true; // Async response
+        return true;
     }
 );
 
@@ -182,7 +178,7 @@ async function ensureContentScriptInjected(tabId: number): Promise<boolean> {
         }
     } catch (e) {
         // An error here likely means the content script isn't injected, which is expected.
-        console.log("Content script ping failed, attempting to inject...");
+        console.log("Content script ping failed, attempting to inject...\nError : ", e);
     }
 
     try {
@@ -208,6 +204,7 @@ async function ensureContentScriptInjected(tabId: number): Promise<boolean> {
 
 // SPA navigation listener
 chrome.webNavigation.onHistoryStateUpdated.addListener(
+
     debounce(async (details) => {
         try {
             await chrome.runtime.sendMessage({
@@ -219,29 +216,38 @@ chrome.webNavigation.onHistoryStateUpdated.addListener(
 
         const cached = await getCachedContent(details.url);
         if (cached) {
-            chrome.runtime.sendMessage({
-                type: MESSAGES.UPDATE_VIEW,
-                payload: { content: cached },
+            // Validate and tag DOM before using cache
+            const response = await chrome.tabs.sendMessage(details.tabId, {
+                type: MESSAGES.VALIDATE_CACHE_AND_TAG_DOM,
+                payload: { cachedData: cached, url: details.url },
             });
+            if (response?.ok) {
+                chrome.runtime.sendMessage({
+                    type: MESSAGES.UPDATE_VIEW,
+                    payload: { content: cached },
+                });
+                return;
+            }
+            // If validation failed, fall through to re-extract
             return;
         }
 
-        // Ensure the content script is ready before triggering extraction
+        // Ensure the content script is ready before interacting
         const isReady = await ensureContentScriptInjected(details.tabId);
-        if (isReady) {
-            const extractedResponse = await triggerExtraction(
-                details.tabId,
-                details.url
-            );
-            if (extractedResponse?.payload?.status === "success") {
-                setCachedContent(extractedResponse.payload, details.url);
+        if (!isReady) return;
 
-                chrome.runtime.sendMessage({
-                    type: MESSAGES.UPDATE_VIEW,
-                    payload: { content: extractedResponse.payload },
-                });
-            }
+        const extractedResponse = await triggerExtraction(
+            details.tabId,
+            details.url
+        );
+        if (extractedResponse?.payload?.status === "success") {
+            setCachedContent(extractedResponse.payload, details.url);
+
+            chrome.runtime.sendMessage({
+                type: MESSAGES.UPDATE_VIEW,
+                payload: { content: extractedResponse.payload },
+            });
         }
     }, 500),
-    geminiNavigationFilter
+    navigationFilter
 );

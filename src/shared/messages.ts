@@ -12,10 +12,12 @@ export const MESSAGES = {
 
 export type MessagePayloads = {
     [MESSAGES.REQUEST_CONTENT]: { tabId: number; url: string };
+    // Optionally, platform can be inferred from url; keeping payload lean for now
     [MESSAGES.EXTRACT_CONTENT]: { url: string };
     [MESSAGES.EXTRACTION_RESULT]: ExtractionResult; // Reference from types.ts
     [MESSAGES.UPDATE_VIEW]: { content: ExtractionResult };
     [MESSAGES.PING]: void;
     [MESSAGES.FOCUS_ELEMENT]: { elementId: string };
-    [MESSAGES.VALIDATE_CACHE_AND_TAG_DOM]: { cachedData: ExtractionResult };
+    // Include url so the content script can select proper platform/selector for validation
+    [MESSAGES.VALIDATE_CACHE_AND_TAG_DOM]: { cachedData: ExtractionResult; url: string };
 };

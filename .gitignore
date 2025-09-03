@@ -8,3 +8,9 @@
 .gemini
 .gemini/
 gha-creds-*.json
+
+# serena mcp server
+.serena
+
+# visual studio code
+.vscode

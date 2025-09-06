@@ -32,40 +32,39 @@ if (!window.__SIDE_PANEL_EXTRACTOR_LOADED__) {
             sender,
             sendResponse
         ) => {
-            (async () => {
-                if (message.type === MESSAGES.PING) {
-                    sendResponse({ ok: true });
-                    return;
-                }
+            if (message.type === MESSAGES.PING) {
+                sendResponse({ ok: true });
+                return false; // synchronous response
+            }
 
-                if (message.type === MESSAGES.EXTRACT_CONTENT) {
+            if (message.type === MESSAGES.EXTRACT_CONTENT) {
+                // Asynchronous path: handleExtraction will call sendResponse later
+                handleExtraction(sendResponse, message.payload.url);
+                return true; // keep channel open for async response
+            }
+
+            if (message.type === MESSAGES.FOCUS_ELEMENT) {
+                handleFocus(message.payload.elementId);
+                return false; // no async response expected
+            }
+
+            if (message.type === MESSAGES.VALIDATE_CACHE_AND_TAG_DOM) {
+                const success = handleValidationAndTagging(
+                    message.payload.cachedData,
+                    message.payload.url
+                );
+                if (!success) {
+                    console.log("Validation failed. Re-extracting.");
+                    // Asynchronous re-extraction path
                     handleExtraction(sendResponse, message.payload.url);
-                    return true; // Keep channel open for async response
+                    return true; // keep channel open for async response
                 }
+                // Synchronous success path
+                sendResponse({ ok: true });
+                return false;
+            }
 
-                if (message.type === MESSAGES.FOCUS_ELEMENT) {
-                    handleFocus(message.payload.elementId);
-                    return;
-                }
-
-                if (message.type === MESSAGES.VALIDATE_CACHE_AND_TAG_DOM) {
-                    const success = handleValidationAndTagging(
-                        message.payload.cachedData,
-                        message.payload.url
-                    );
-                    if (!success) {
-                        console.log("Validation failed. Re-extracting.");
-                        // If validation fails, trigger a fresh extraction
-                        handleExtraction(sendResponse, message.payload.url);
-                        return true; // Keep channel open for async response
-                    }
-                    sendResponse({ ok: true }); // Inform background that tagging was successful
-                    return;
-                }
-            })();
-
-            // We reply asynchronously in some branches
-            return true;
+            return false; // default: no async response
         }
     );
 }
